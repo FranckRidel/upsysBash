@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#You can run this script directly from its folder (./up). 
+#You can also place it in /usr/bin , then you just have to type from anywhere : up
+
+# The first time, type the following commands in a terminal :
+# sudo touch /home/updates.txt
+# sudo chmod 777 /home/updates.txt
+
+#Update deposits, programs and the system with the answer "y" automated
+sudo apt-get update 
+echo y | sudo apt-get upgrade
+echo y | sudo apt-get dist-upgrade
+echo y | sudo apt-get autoremove
+echo y | sudo apt-get autoclean
+
+#Keep track of the update in a file
+	#The title
+echo -e "\t\t***** UPDATE $(date +%B) $(date +%Y) *****"  >> /home/updates.txt
+
+	#Define User
+if [ $USER != "" ]; then
+	updater=$USER
+else #If updated by crontab
+	updater="auto update" 
+fi
+
+	#Write the message in the file update.txt
+echo "Your system has been updated on $(date +\"%m/%d/%Y\") at $(date +%X) by $updater" >> /home/updates.txt
+
+	#Retrieve the IP address of the machine that launched this script
+ipPub=$(curl icanhazip.com)
+echo "Public IP : $ipPub" >> /home/updates.txt
+
+	#If update SSH -> Write private IP and MAC addresses in update.txt
+if [[ $SSH_CLIENT != "" ]]; then
+	ipPriv=$(echo $SSH_CLIENT | cut -d " " -f 1)
+	echo "Logged SSH from $(sudo arp | grep $ipPriv )" >> /home/updates.txt
+fi 
+
+#Update the locate database
+sudo updatedb 
+
+#View the current status of the machine in the updates.txt file and in the terminal
+uname -a >> /home/updates.txt && echo -e "\n" >> /home/updates.txt
+screenfetch
